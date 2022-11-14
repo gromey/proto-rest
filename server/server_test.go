@@ -24,6 +24,11 @@ func equal(t *testing.T, exp, got any) {
 	}
 }
 
+var (
+	cdrJSON = coder.NewCoder("application/json", json.Marshal, json.Unmarshal)
+	cdr     = coder.NewCoder("", json.Marshal, json.Unmarshal)
+)
+
 type exampleStructSrv struct {
 	Field int
 }
@@ -32,7 +37,7 @@ type exampleStructClt struct {
 	Field string
 }
 
-func makeRequest(t *testing.T, method string, srv *httptest.Server, in any, out any) {
+func makeRequestWriteResponse(t *testing.T, method string, srv *httptest.Server, in any, out any) {
 	var reader io.Reader
 	if in != nil {
 		buf := new(bytes.Buffer)
@@ -81,7 +86,7 @@ func TestProtoServer_WriteResponse(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			srvJSON := server.New(coder.NewCoder("application/json", json.Marshal, json.Unmarshal))
+			srvJSON := server.New(cdrJSON)
 
 			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				equal(t, r.URL.String(), "/path")
@@ -98,7 +103,70 @@ func TestProtoServer_WriteResponse(t *testing.T) {
 			}))
 			defer srv.Close()
 
-			makeRequest(t, test.method, srv, test.input, test.output)
+			makeRequestWriteResponse(t, test.method, srv, test.input, test.output)
+		})
+	}
+}
+
+func makeRequestContentType(t *testing.T, srv *httptest.Server, expContentType string) {
+	req, err := http.NewRequest(http.MethodGet, srv.URL+"/path", nil)
+	equal(t, nil, err)
+
+	resp, err := srv.Client().Do(req)
+	equal(t, nil, err)
+	equal(t, expContentType, resp.Header.Get(coder.ContentType))
+}
+
+func TestProtoServer_ResponseContentType(t *testing.T) {
+	output := &exampleStructClt{Field: "example"}
+	var tests = []struct {
+		name              string
+		coder             coder.Coder
+		customContentType string
+		expContentType    string
+		output            any
+	}{
+		{
+			name:  "empty content type",
+			coder: cdrJSON,
+		},
+		{
+			name:           "coder content type",
+			coder:          cdrJSON,
+			expContentType: "application/json",
+			output:         output,
+		},
+		{
+			name:              "custom content type",
+			coder:             cdrJSON,
+			customContentType: "application/xml",
+			expContentType:    "application/xml",
+			output:            output,
+		},
+		{
+			name:           "default content type",
+			coder:          cdr,
+			expContentType: "text/plain; charset=utf-8",
+			output:         output,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			srvJSON := server.New(test.coder)
+
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				equal(t, r.URL.String(), "/path")
+
+				if test.customContentType != "" {
+					w.Header().Set(coder.ContentType, test.customContentType)
+				}
+
+				srvJSON.WriteResponse(w, http.StatusOK, test.output)
+			}))
+			defer srv.Close()
+
+			makeRequestContentType(t, srv, test.expContentType)
 		})
 	}
 }

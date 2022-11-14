@@ -24,7 +24,11 @@ func New(coder coder.Coder) Server {
 // WriteResponse encodes the value pointed to by v and writes it and statusCode to the stream.
 func (s *protoServer) WriteResponse(w http.ResponseWriter, statusCode int, v any) {
 	if v != nil {
-		setContentType(w, s.ContentType())
+		if w.Header().Get(coder.ContentType) == "" {
+			if t := s.ContentType(); t != "" {
+				w.Header().Set(coder.ContentType, t)
+			}
+		}
 		w.WriteHeader(statusCode)
 		if err := s.Encode(w, v); err != nil {
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -35,13 +39,4 @@ func (s *protoServer) WriteResponse(w http.ResponseWriter, statusCode int, v any
 		return
 	}
 	w.WriteHeader(statusCode)
-}
-
-func setContentType(w http.ResponseWriter, contentType string) {
-	if w.Header().Get(coder.ContentType) != "" {
-		return
-	}
-	if contentType != "" {
-		w.Header().Set(coder.ContentType, contentType)
-	}
 }
