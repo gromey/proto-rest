@@ -27,7 +27,7 @@ func New(coder coder.Coder, client *http.Client) Client {
 
 // Request sends an HTTP request based on the given method, URL, and optional body, and returns an HTTP response.
 // To add additional data to the request, use the optional function f.
-func (c protoClient) Request(ctx context.Context, method, url string, body any, f func(*http.Request)) (*http.Response, error) {
+func (c *protoClient) Request(ctx context.Context, method, url string, body any, f func(*http.Request)) (*http.Response, error) {
 	var err error
 	var reader io.Reader
 	if body != nil {
@@ -44,7 +44,9 @@ func (c protoClient) Request(ctx context.Context, method, url string, body any, 
 	}
 
 	if reader != nil {
-		setContentType(request, c.ContentType())
+		if t := c.ContentType(); t != "" {
+			request.Header.Set(coder.ContentType, t)
+		}
 	}
 
 	if f != nil {
@@ -65,10 +67,4 @@ func (c protoClient) Request(ctx context.Context, method, url string, body any, 
 	}
 
 	return response, nil
-}
-
-func setContentType(request *http.Request, contentType string) {
-	if contentType != "" {
-		request.Header.Set(coder.ContentType, contentType)
-	}
 }

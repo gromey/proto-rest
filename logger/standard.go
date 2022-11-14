@@ -13,10 +13,10 @@ import (
 type format uint8
 
 const (
-	timeFormatDefault = "2006/01/02 15:04:05.000"
-
 	FormatText format = iota
 	FormatJSON
+
+	timeFormatDefault = "2006/01/02 15:04:05.000"
 )
 
 var _ Logger = (*StdLogger)(nil)
@@ -54,7 +54,7 @@ func New(c *Config) *StdLogger {
 	}
 
 	l.formatter = l.formatterText
-	if c.Format != 0 {
+	if c.Format != FormatText {
 		l.formatter = l.formatterJSON
 	}
 

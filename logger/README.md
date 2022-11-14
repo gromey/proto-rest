@@ -90,3 +90,13 @@ func main() {
 	// {"time":"2022-11-01 15:04:05","level":"INFO","message":"Hello World!"}
 }
 ```
+
+To reduce unnecessary memory allocations, it is recommended to check the logging level before calling the log function.
+
+Example:
+
+```go
+	if logger.InLevel(logger.LevelInfo) {
+		logger.Info("Hello World!")
+	}
+```

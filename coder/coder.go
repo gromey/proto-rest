@@ -102,6 +102,6 @@ func NewCoder(contentType string, marshal func(v any) ([]byte, error), unmarshal
 
 // ContentType returns a string value representing the Coder type.
 // Use as the ContentType header of HTTP requests.
-func (c *coder) ContentType() string {
+func (c coder) ContentType() string {
 	return c.t
 }

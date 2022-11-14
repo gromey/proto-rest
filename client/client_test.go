@@ -23,6 +23,8 @@ func equal(t *testing.T, exp, got any) {
 	}
 }
 
+var cdrJSON = coder.NewCoder("application/json", json.Marshal, json.Unmarshal)
+
 type exampleStructSrv struct {
 	Field int
 }
@@ -31,7 +33,7 @@ type exampleStructClt struct {
 	Field string
 }
 
-func makeTestSrv(t *testing.T, in any, out any) *httptest.Server {
+func makeTestSrvRequest(t *testing.T, in, out any) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		equal(t, r.URL.String(), "/path")
 
@@ -71,10 +73,10 @@ func TestProtoClient_Request(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			srv := makeTestSrv(t, test.input, test.output)
+			srv := makeTestSrvRequest(t, test.input, test.output)
 			defer srv.Close()
 
-			clt := client.New(coder.NewCoder("application/json", json.Marshal, json.Unmarshal), srv.Client())
+			clt := client.New(cdrJSON, srv.Client())
 
 			resp, err := clt.Request(context.Background(), test.method, srv.URL+"/path", test.input, nil)
 			equal(t, nil, err)
@@ -86,6 +88,72 @@ func TestProtoClient_Request(t *testing.T) {
 			err = clt.Decode(resp.Body, output)
 			equal(t, nil, err)
 			equal(t, test.output, output)
+		})
+	}
+}
+
+func makeTestSrvContentType(t *testing.T, expContentType string) *httptest.Server {
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		equal(t, r.URL.String(), "/path")
+		equal(t, expContentType, r.Header.Get(coder.ContentType))
+	}))
+}
+
+func TestProtoClient_ContentType(t *testing.T) {
+	var tests = []struct {
+		name        string
+		method      string
+		coder       coder.Coder
+		contentType string
+		input       any
+		rFunc       func(r *http.Request)
+	}{
+		{
+			name:   "GET request default",
+			method: http.MethodGet,
+		},
+		{
+			name:        "GET request with coder content type",
+			method:      http.MethodGet,
+			contentType: cdrJSON.ContentType(),
+			rFunc: func(r *http.Request) {
+				r.Header.Set(coder.ContentType, cdrJSON.ContentType())
+			},
+		},
+		{
+			name:        "GET request with custom content type",
+			method:      http.MethodGet,
+			contentType: "application/xml",
+			rFunc: func(r *http.Request) {
+				r.Header.Set(coder.ContentType, "application/xml")
+			},
+		},
+		{
+			name:        "POST request with coder content type",
+			contentType: cdrJSON.ContentType(),
+			method:      http.MethodPost,
+			input:       &exampleStructSrv{Field: 1},
+		},
+		{
+			name:        "POST request with custom content type",
+			contentType: "application/xml",
+			method:      http.MethodPost,
+			input:       &exampleStructSrv{Field: 1},
+			rFunc: func(r *http.Request) {
+				r.Header.Set(coder.ContentType, "application/xml")
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			srv := makeTestSrvContentType(t, test.contentType)
+			defer srv.Close()
+
+			clt := client.New(cdrJSON, srv.Client())
+
+			_, err := clt.Request(context.Background(), test.method, srv.URL+"/path", test.input, test.rFunc)
+			equal(t, nil, err)
 		})
 	}
 }
