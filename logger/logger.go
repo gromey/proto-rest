@@ -92,7 +92,11 @@ func Trace(v ...any) {
 
 // DumpHttpRequest dumps the HTTP request and prints out with logFunc.
 func DumpHttpRequest(r *http.Request, logFunc func(v ...any)) {
-	b, err := httputil.DumpRequestOut(r, true)
+	dumpFunc := httputil.DumpRequestOut
+	if r.URL.Scheme == "" || r.URL.Host == "" {
+		dumpFunc = httputil.DumpRequest
+	}
+	b, err := dumpFunc(r, true)
 	if err != nil {
 		if InLevel(LevelError) {
 			Error("REQUEST LOG error: ", err)
