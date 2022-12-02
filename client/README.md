@@ -25,7 +25,7 @@ func main() {
 
 	cUrl, err := url.Parse("http://localhost:8080/example/")
 	if err != nil {
-		logger.Fatal(err)
+		panic(err)
 	}
 
 	params := make(url.Values)
@@ -39,7 +39,7 @@ func main() {
 
 	resp, err := clientJSON.Request(context.TODO(), http.MethodGet, cUrl.String(), nil, f)
 	if err != nil {
-		logger.Fatal(err)
+		panic(err)
 	}
 
 	defer resp.Body.Close()
@@ -48,7 +48,7 @@ func main() {
 
 	err = clientJSON.Decode(resp.Body, res)
 	if err != nil {
-		logger.Fatal(err)
+		panic(err)
 	}
 }
 ```
@@ -79,7 +79,7 @@ func main() {
 
 	resp, err := clientJSON.Request(context.TODO(), http.MethodPost, cUrl, req, nil)
 	if err != nil {
-		logger.Fatal(err)
+		panic(err)
 	}
 
 	defer resp.Body.Close()
@@ -90,7 +90,7 @@ func main() {
 
 	err = clientJSON.Decode(resp.Body, res)
 	if err != nil {
-		logger.Fatal(err)
+		panic(err)
 	}
 }
 ```
