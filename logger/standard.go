@@ -23,8 +23,8 @@ var _ Logger = (*StdLogger)(nil)
 
 type Config struct {
 	TimeFormat    string
-	Format        format
 	AdditionalOut io.Writer
+	Format        format
 	Level         Level
 	FuncName      bool
 }
@@ -32,8 +32,8 @@ type Config struct {
 type StdLogger struct {
 	mu         sync.RWMutex
 	timeFormat string
-	formatter  func(Level, string) string
 	out        io.Writer
+	formatter  func(Level, string) string
 	level      Level
 	funcName   bool
 }
@@ -53,13 +53,13 @@ func New(c *Config) *StdLogger {
 		l.timeFormat = timeFormatDefault
 	}
 
+	if c.AdditionalOut != os.Stdout && c.AdditionalOut != os.Stderr && c.AdditionalOut != nil {
+		l.out = c.AdditionalOut
+	}
+
 	l.formatter = l.formatterText
 	if c.Format != FormatText {
 		l.formatter = l.formatterJSON
-	}
-
-	if c.AdditionalOut != os.Stdout && c.AdditionalOut != os.Stderr && c.AdditionalOut != nil {
-		l.out = c.AdditionalOut
 	}
 
 	return l
@@ -227,7 +227,7 @@ func (l *StdLogger) formatterText(lvl Level, msg string) string {
 	buf := new(bytes.Buffer)
 	buf.WriteString(time.Now().Format(l.timeFormat))
 	buf.WriteByte(' ')
-	buf.WriteString(levelToString(lvl))
+	buf.WriteString(lvl.String())
 	buf.WriteByte(' ')
 
 	if l.funcName || l.level == LevelTrace {
@@ -256,7 +256,7 @@ type jsonLog struct {
 func (l *StdLogger) formatterJSON(lvl Level, msg string) string {
 	buf := new(jsonLog)
 	buf.Time = time.Now().Format(l.timeFormat)
-	buf.Level = levelToString(lvl)
+	buf.Level = lvl.String()
 
 	if l.funcName || l.level == LevelTrace {
 		name, file, line := FunctionInfo(5)
@@ -271,21 +271,4 @@ func (l *StdLogger) formatterJSON(lvl Level, msg string) string {
 	log, _ := json.Marshal(buf)
 
 	return string(log)
-}
-
-func levelToString(lvl Level) string {
-	switch lvl {
-	case LevelFatal:
-		return "FATAL"
-	case LevelError:
-		return "ERROR"
-	case LevelWarn:
-		return "WARN"
-	case LevelInfo:
-		return "INFO"
-	case LevelDebug:
-		return "DEBUG"
-	default:
-		return "TRACE"
-	}
 }

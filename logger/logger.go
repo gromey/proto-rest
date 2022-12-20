@@ -1,8 +1,10 @@
 package logger
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httputil"
+	"strings"
 )
 
 type Level uint8
@@ -15,6 +17,43 @@ const (
 	LevelDebug
 	LevelTrace
 )
+
+func (lvl Level) String() string {
+	switch lvl {
+	case LevelFatal:
+		return "FATAL"
+	case LevelError:
+		return "ERROR"
+	case LevelWarn:
+		return "WARN"
+	case LevelInfo:
+		return "INFO"
+	case LevelDebug:
+		return "DEBUG"
+	default:
+		return "TRACE"
+	}
+}
+
+// ParseLevel takes a string level and returns the logger Level constant.
+func ParseLevel(lvl string) (Level, error) {
+	switch strings.ToLower(lvl) {
+	case "fatal":
+		return LevelFatal, nil
+	case "error":
+		return LevelError, nil
+	case "warn", "warning":
+		return LevelWarn, nil
+	case "info":
+		return LevelInfo, nil
+	case "debug":
+		return LevelDebug, nil
+	case "trace":
+		return LevelTrace, nil
+	default:
+		return LevelFatal, fmt.Errorf("not a valid logger Level: %s", lvl)
+	}
+}
 
 type Logger interface {
 	InLevel(lvl Level) bool
@@ -32,12 +71,13 @@ type Logger interface {
 	Trace(v ...any)
 }
 
-var std Logger = New(&Config{Level: LevelTrace, FuncName: true})
+var std Logger = New(&Config{Level: LevelDebug, FuncName: true})
 
 func SetLogger(logger Logger) {
 	std = logger
 }
 
+// InLevel returns true if the given level is less than or equal to the current logger level.
 func InLevel(level Level) bool {
 	return std.InLevel(level)
 }
