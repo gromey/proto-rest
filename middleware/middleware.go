@@ -13,22 +13,23 @@ import (
 	"github.com/gromey/proto-rest/logger"
 )
 
-// Timer middleware measures the time taken by http.HandlerFunc.
+// Timer measures the time taken by http.HandlerFunc.
 func Timer(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
+		defer func(start time.Time) {
+			if logger.InLevel(logger.LevelDebug) {
+				logger.Debugf("%s %s %s", r.Method, r.RequestURI, time.Since(start))
+			}
+		}(time.Now())
 		next.ServeHTTP(w, r)
-		if logger.InLevel(logger.LevelDebug) {
-			logger.Debugf("%s %s %s", r.Method, r.RequestURI, time.Since(start))
-		}
 	})
 }
 
-// PanicCatcher middleware handles panics in http.HandlerFunc.
+// PanicCatcher handles panics in http.HandlerFunc.
 func PanicCatcher(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
-			if err := recover(); err != nil {
+			if rec := recover(); rec != nil {
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 				if logger.InLevel(logger.LevelError) {
 					logger.Error(string(debug.Stack()))
@@ -48,7 +49,7 @@ type CORSOptions struct {
 	AllowCredentials bool     // Allow browsers to expose the response to the external JavaScript code.
 }
 
-// AllowCORS middleware sets headers for CORS mechanism supports secure.
+// AllowCORS sets headers for CORS mechanism supports secure.
 func AllowCORS(next http.Handler, opts *CORSOptions) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if origin := r.Header.Get("Origin"); checkOrigin(origin, opts.AllowedOrigins) {

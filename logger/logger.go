@@ -71,7 +71,7 @@ type Logger interface {
 	Trace(v ...any)
 }
 
-var std Logger = New(&Config{Level: LevelDebug, FuncName: true})
+var std Logger = New(&Config{Level: LevelTrace})
 
 func SetLogger(logger Logger) {
 	std = logger
