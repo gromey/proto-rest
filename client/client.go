@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"github.com/gromey/proto-rest/coder"
-	"github.com/gromey/proto-rest/logger"
 )
 
 type Client interface {
@@ -28,18 +27,17 @@ func New(coder coder.Coder, client *http.Client) Client {
 // Request sends an HTTP request based on the given method, URL, and optional body, and returns an HTTP response.
 // To add additional data to the request, use the optional function f.
 func (c *protoClient) Request(ctx context.Context, method, url string, body any, f func(*http.Request)) (*http.Response, error) {
-	var err error
 	var reader io.Reader
 	if body != nil {
 		buf := new(bytes.Buffer)
-		if err = c.Encode(buf, body); err != nil {
+		if err := c.Encode(buf, body); err != nil {
 			return nil, err
 		}
 		reader = buf
 	}
 
-	var request *http.Request
-	if request, err = http.NewRequestWithContext(ctx, method, url, reader); err != nil {
+	request, err := http.NewRequestWithContext(ctx, method, url, reader)
+	if err != nil {
 		return nil, err
 	}
 
@@ -53,18 +51,5 @@ func (c *protoClient) Request(ctx context.Context, method, url string, body any,
 		f(request)
 	}
 
-	if logger.InLevel(logger.LevelTrace) && request != nil {
-		logger.DumpHttpRequest(request, logger.Trace)
-	}
-
-	var response *http.Response
-	if response, err = c.Do(request); err != nil {
-		return nil, err
-	}
-
-	if logger.InLevel(logger.LevelTrace) && response != nil {
-		logger.DumpHttpResponse(response, logger.Trace)
-	}
-
-	return response, nil
+	return c.Do(request)
 }

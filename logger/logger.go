@@ -35,6 +35,42 @@ func (lvl Level) String() string {
 	}
 }
 
+// Printf returns a logger printf function for current logger level.
+func (lvl Level) Printf() func(string, ...any) {
+	switch lvl {
+	case LevelFatal:
+		return Fatalf
+	case LevelError:
+		return Errorf
+	case LevelWarn:
+		return Warnf
+	case LevelInfo:
+		return Infof
+	case LevelDebug:
+		return Debugf
+	default:
+		return Tracef
+	}
+}
+
+// Print returns a logger print function for current logger level.
+func (lvl Level) Print() func(...any) {
+	switch lvl {
+	case LevelFatal:
+		return Fatal
+	case LevelError:
+		return Error
+	case LevelWarn:
+		return Warn
+	case LevelInfo:
+		return Info
+	case LevelDebug:
+		return Debug
+	default:
+		return Trace
+	}
+}
+
 // ParseLevel takes a string level and returns the logger Level constant.
 func ParseLevel(lvl string) (Level, error) {
 	switch strings.ToLower(lvl) {
@@ -71,7 +107,7 @@ type Logger interface {
 	Trace(v ...any)
 }
 
-var std Logger = New(&Config{Level: LevelDebug, FuncName: true})
+var std Logger = New(&Config{Level: LevelTrace})
 
 func SetLogger(logger Logger) {
 	std = logger
