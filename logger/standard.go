@@ -233,11 +233,9 @@ func (l *StdLogger) formatterText(lvl Level, msg string) string {
 	if l.funcName || l.level == LevelTrace {
 		name, file, line := FunctionInfo(5)
 		if l.level == LevelTrace {
-			buf.WriteString(fmt.Sprintf("%s:%d", file, line))
-			buf.WriteByte(' ')
+			buf.WriteString(fmt.Sprintf("%s:%d ", file, line))
 		}
-		buf.WriteString("Func: ")
-		buf.WriteString(fmt.Sprintf("%s() ", name))
+		buf.WriteString(fmt.Sprintf("Func: %s() ", name))
 	}
 
 	buf.WriteString(msg)
