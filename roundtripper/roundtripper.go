@@ -18,12 +18,11 @@ func (f Func) RoundTrip(r *http.Request) (*http.Response, error) {
 }
 
 // Sequencer chains http.RoundTrippers in a chain.
-func Sequencer(rts ...func(http.RoundTripper) http.RoundTripper) http.RoundTripper {
-	rt := http.DefaultTransport
+func Sequencer(baseRoundTripper http.RoundTripper, rts ...func(http.RoundTripper) http.RoundTripper) http.RoundTripper {
 	for _, f := range rts {
-		rt = f(rt)
+		baseRoundTripper = f(baseRoundTripper)
 	}
-	return rt
+	return baseRoundTripper
 }
 
 // Timer measures the time taken by http.RoundTripper.
