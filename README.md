@@ -7,9 +7,11 @@
 
 ### Consists of the following main packages:
 
-- [Logger](https://github.com/gromey/proto-rest/blob/main/logger/README.md)
-- [Coder](https://github.com/gromey/proto-rest/blob/main/coder/README.md)
 - [Client](https://github.com/gromey/proto-rest/blob/main/client/README.md)
+- [Coder](https://github.com/gromey/proto-rest/blob/main/coder/README.md)
+- [Logger](https://github.com/gromey/proto-rest/blob/main/logger/README.md)
+- [Middleware](https://github.com/gromey/proto-rest/blob/main/middleware/README.md)
+- [RoundTripper](https://github.com/gromey/proto-rest/blob/main/roundtripper/README.md)
 - [Server](https://github.com/gromey/proto-rest/blob/main/server/README.md)
 
 ## Installation

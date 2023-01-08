@@ -39,13 +39,12 @@ func main() {
 	logger.Info("Hello World!")
 	// 2022/11/01 15:04:05.678 [INFO] /.../proto-rest/main.go:21 Func: main() Hello World!
 
-	lCfg := &logger.Config{
-		TimeFormat:    "2006-01-02 15:04:05",
-		Format:        logger.FormatJSON,
-		AdditionalOut: file,
-		Level:         logger.LevelInfo,
-		FuncName:      true,
-	}
+	lCfg := new(logger.Config)
+	lCfg.TimeFormat = "2006-01-02 15:04:05"
+	lCfg.Format = logger.FormatJSON
+	lCfg.AdditionalOut = file
+	lCfg.Level = logger.LevelInfo
+	lCfg.FuncName = true
 
 	logger.SetLogger(logger.New(lCfg))
 

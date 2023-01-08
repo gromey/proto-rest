@@ -1,6 +1,6 @@
 # Client
 
-### The `client` package implements the core functionality of a [coder](https://github.com/gromey/proto-rest/blob/main/coder/README.md)-based client with trace [logging](https://github.com/gromey/proto-rest/blob/main/logger/README.md).
+### The `client` package implements the core functionality of a [coder](https://github.com/gromey/proto-rest/blob/main/coder/README.md)-based client.
 
 ## Getting Started
 
@@ -15,7 +15,6 @@ import (
 
 	"github.com/gromey/proto-rest/client"
 	"github.com/gromey/proto-rest/coder"
-	"github.com/gromey/proto-rest/logger"
 )
 
 func main() {
@@ -63,7 +62,6 @@ import (
 
 	"github.com/gromey/proto-rest/client"
 	"github.com/gromey/proto-rest/coder"
-	"github.com/gromey/proto-rest/logger"
 )
 
 func main() {
